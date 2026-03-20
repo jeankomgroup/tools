@@ -3,695 +3,313 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Gerador de Códigos</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<title>Ferramentas Internas — Komgroup</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;600;700&family=Syne:wght@400;600;700;800&display=swap');
-  /* OCR-B rendered as SVG symbols — no external font needed */
-  *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-  :root{
-    --bg:#0d0f14;--surface:#161820;--surface2:#1e2130;--border:#2a2d3e;
-    --accent:#5b7cfa;--accent2:#a78bfa;--success:#34d399;--warning:#fbbf24;
-    --danger:#f87171;--text:#e2e8f0;--muted:#64748b;--dim:#94a3b8;
-  }
-  body{font-family:'Syne',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden}
-  body::before{content:'';position:fixed;inset:0;background-image:linear-gradient(rgba(91,124,250,.03) 1px,transparent 1px),linear-gradient(90deg,rgba(91,124,250,.03) 1px,transparent 1px);background-size:40px 40px;pointer-events:none;z-index:0}
-  .glow{position:fixed;width:600px;height:600px;border-radius:50%;filter:blur(120px);pointer-events:none;z-index:0}
-  .g1{top:-200px;left:-100px;background:rgba(91,124,250,.08)}
-  .g2{bottom:-200px;right:-100px;background:rgba(167,139,250,.06)}
-  .wrap{position:relative;z-index:1;max-width:960px;margin:0 auto;padding:40px 24px 80px}
+@import url('https://fonts.bunny.net/css?family=jetbrains-mono:400,700|rawline:400,600,700,800&display=swap');
 
-  /* HEADER */
-  header{display:flex;align-items:center;gap:16px;margin-bottom:40px}
-  .logo{width:48px;height:48px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:22px;flex-shrink:0;box-shadow:0 0 24px rgba(91,124,250,.3)}
-  .htxt h1{font-size:22px;font-weight:800;letter-spacing:-.5px;background:linear-gradient(135deg,#e2e8f0,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-  .htxt p{font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-top:2px}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 
-  /* NOTICE */
-  .notice{background:rgba(91,124,250,.08);border:1px solid rgba(91,124,250,.2);border-radius:10px;padding:14px 18px;margin-bottom:28px;display:flex;gap:12px;font-size:13px;color:var(--dim);line-height:1.6}
-  .notice strong{color:var(--accent)}
+:root{
+  --bg:#0d0f14;
+  --surface:#161820;
+  --surface2:#1e2130;
+  --border:#2a2d3e;
+  --accent:#5b7cfa;
+  --accent2:#a78bfa;
+  --text:#e2e8f0;
+  --muted:#64748b;
+  --dim:#94a3b8;
+}
 
-  /* LAYOUT */
-  .layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-  @media(max-width:680px){.layout{grid-template-columns:1fr}}
+body{
+  font-family:'Rawline',sans-serif;
+  background:var(--bg);
+  color:var(--text);
+  min-height:100vh;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding:40px 24px;
+  overflow-x:hidden;
+}
 
-  /* CARDS */
-  .card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px}
-  .card-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:16px}
+body::before{
+  content:'';
+  position:fixed;inset:0;
+  background-image:
+    linear-gradient(rgba(91,124,250,.03) 1px,transparent 1px),
+    linear-gradient(90deg,rgba(91,124,250,.03) 1px,transparent 1px);
+  background-size:40px 40px;
+  pointer-events:none;
+}
 
-  /* TYPE SELECTOR */
-  .type-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:20px}
-  .type-btn{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 8px;text-align:center;cursor:pointer;transition:all .2s;font-family:'JetBrains Mono',monospace}
-  .type-btn:hover{border-color:var(--accent)}
-  .type-btn.active{background:rgba(91,124,250,.15);border-color:var(--accent);box-shadow:0 0 0 1px var(--accent) inset}
-  .type-btn .tb-name{font-size:13px;font-weight:700;color:var(--text);display:block;margin-bottom:3px}
-  .type-btn .tb-desc{font-size:10px;color:var(--muted);display:block}
-  .type-btn.active .tb-name{color:var(--accent)}
+.glow{
+  position:fixed;width:700px;height:700px;border-radius:50%;
+  filter:blur(130px);pointer-events:none;
+}
+.g1{top:-250px;left:-150px;background:rgba(91,124,250,.07)}
+.g2{bottom:-250px;right:-150px;background:rgba(167,139,250,.05)}
 
-  /* INPUT */
-  .field{margin-bottom:16px}
-  .field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:8px}
-  .field input,.field textarea{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--text);outline:none;transition:border-color .2s;resize:vertical}
-  .field input:focus,.field textarea:focus{border-color:var(--accent)}
-  .field input::placeholder,.field textarea::placeholder{color:var(--muted)}
-  .field .hint{font-size:11px;color:var(--muted);margin-top:6px;font-family:'JetBrains Mono',monospace}
-  .field .hint.ok{color:var(--success)}
-  .field .hint.er{color:var(--danger)}
+.page{
+  position:relative;z-index:1;
+  max-width:680px;width:100%;
+}
 
-  /* OPTS */
-  .opts-row{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
-  .tog{display:flex;align-items:center;gap:10px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 14px;cursor:pointer;transition:border-color .2s;user-select:none;font-size:13px;color:var(--dim);font-weight:600}
-  .tog:hover{border-color:var(--accent)}
-  .sw{width:34px;height:18px;background:var(--border);border-radius:20px;position:relative;transition:background .2s;flex-shrink:0}
-  .sw::after{content:'';position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:#fff;transition:transform .2s}
-  .sw.on{background:var(--accent)}
-  .sw.on::after{transform:translateX(16px)}
+/* Header */
+.header{
+  text-align:center;
+  margin-bottom:56px;
+}
 
-  /* QR options */
-  .qr-opts{display:none}
-  .qr-opts.show{display:block}
-  .color-row{display:flex;gap:12px;margin-bottom:16px}
-  .color-field{flex:1}
-  .color-field label{display:block;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);font-family:'JetBrains Mono',monospace;margin-bottom:8px}
-  .color-field input[type=color]{width:100%;height:40px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:4px 8px;cursor:pointer}
+.badge{
+  display:inline-flex;align-items:center;gap:8px;
+  background:rgba(91,124,250,.1);
+  border:1px solid rgba(91,124,250,.2);
+  border-radius:20px;
+  padding:6px 16px;
+  font-size:12px;
+  font-family:'JetBrains Mono',monospace;
+  color:var(--accent);
+  margin-bottom:24px;
+  letter-spacing:.04em;
+}
 
-  /* BTNS */
-  .btn{display:inline-flex;align-items:center;gap:8px;padding:12px 22px;border-radius:10px;border:none;font-family:'Syne',sans-serif;font-size:14px;font-weight:700;cursor:pointer;transition:all .2s}
-  .btn:disabled{opacity:.4;cursor:not-allowed}
-  .btn-p{background:linear-gradient(135deg,var(--accent),var(--accent2));color:#fff;box-shadow:0 4px 20px rgba(91,124,250,.3)}
-  .btn-p:not(:disabled):hover{transform:translateY(-2px);box-shadow:0 8px 28px rgba(91,124,250,.45)}
-  .btn-s{background:var(--surface2);border:1px solid var(--border);color:var(--dim)}
-  .btn-s:not(:disabled):hover{border-color:var(--accent);color:var(--text)}
-  .btn-d{background:rgba(248,113,113,.1);border:1px solid rgba(248,113,113,.2);color:var(--danger)}
-  .btn-d:not(:disabled):hover{background:rgba(248,113,113,.18)}
-  .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:4px}
+.badge::before{
+  content:'';
+  width:6px;height:6px;
+  border-radius:50%;
+  background:var(--accent);
+  animation:pulse 2s infinite;
+}
 
-  /* PREVIEW */
-  .preview-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:24px;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:300px;gap:20px}
-  .preview-empty{text-align:center;color:var(--muted)}
-  .preview-empty .ei{font-size:48px;margin-bottom:12px;opacity:.3;display:block}
-  .preview-empty p{font-size:13px}
+@keyframes pulse{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:.4;transform:scale(.8)}
+}
 
-  #preview-area{display:none;flex-direction:column;align-items:center;gap:16px;width:100%}
-  #preview-area.show{display:flex}
+h1{
+  font-size:clamp(32px,5vw,48px);
+  font-weight:800;
+  letter-spacing:-1.5px;
+  line-height:1.1;
+  background:linear-gradient(135deg,#e2e8f0 30%,#64748b);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  margin-bottom:16px;
+}
 
-  .preview-box{background:#fff;border-radius:8px;padding:16px;display:flex;align-items:center;justify-content:center;box-shadow:0 0 40px rgba(0,0,0,.4)}
-  .preview-box svg{max-width:100%;height:auto;display:block;}
+.subtitle{
+  font-size:15px;
+  color:var(--muted);
+  line-height:1.6;
+  max-width:420px;
+  margin:0 auto;
+}
 
-  .preview-info{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 16px;font-family:'JetBrains Mono',monospace}
-  .pinfo-row{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--muted);padding:3px 0}
-  .pinfo-row span:last-child{color:var(--dim);font-weight:600}
-  .badge{font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;border-radius:5px;padding:3px 8px}
-  .badge.ok{background:rgba(52,211,153,.15);color:var(--success)}
-  .badge.er{background:rgba(248,113,113,.15);color:var(--danger)}
-  .badge.ac{background:rgba(91,124,250,.15);color:var(--accent)}
+/* Grid de ferramentas */
+.grid{
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(280px,1fr));
+  gap:16px;
+  margin-bottom:48px;
+}
 
-  .dl-btns{display:flex;gap:10px;width:100%;flex-wrap:wrap}
-  .dl-btns .btn{flex:1;justify-content:center;font-size:13px;padding:10px 14px}
+.card{
+  display:flex;
+  flex-direction:column;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  padding:28px;
+  text-decoration:none;
+  color:var(--text);
+  transition:all .25s ease;
+  position:relative;
+  overflow:hidden;
+  animation:cardIn .5s ease both;
+}
 
-  /* HISTORY */
-  .history-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:0;overflow:hidden;margin-top:20px;display:none}
-  .history-card.show{display:block}
-  .history-head{display:grid;grid-template-columns:auto 1fr 80px 80px 90px;gap:10px;padding:11px 16px;background:var(--surface2);border-bottom:1px solid var(--border);font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-family:'JetBrains Mono',monospace}
-  .history-body{max-height:320px;overflow-y:auto}
-  .history-body::-webkit-scrollbar{width:5px}
-  .history-body::-webkit-scrollbar-thumb{background:var(--border);border-radius:3px}
-  .hrow{display:grid;grid-template-columns:auto 1fr 80px 80px 90px;gap:10px;padding:10px 16px;border-bottom:1px solid rgba(42,45,62,.5);align-items:center;cursor:pointer;transition:background .15s;animation:ri .3s ease both}
-  .hrow:last-child{border-bottom:none}
-  .hrow:hover{background:rgba(91,124,250,.05)}
-  @keyframes ri{from{opacity:0;transform:translateX(-6px)}to{opacity:1;transform:none}}
-  .hrow .hcode{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--dim);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-  .hrow .htype{font-size:11px;font-weight:700;font-family:'JetBrains Mono',monospace;border-radius:5px;padding:2px 7px;text-align:center;background:rgba(91,124,250,.12);color:var(--accent)}
-  .hrow .htime{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.card:nth-child(1){animation-delay:.05s}
+.card:nth-child(2){animation-delay:.1s}
+.card:nth-child(3){animation-delay:.15s}
+.card:nth-child(4){animation-delay:.2s}
 
-  /* TOAST */
-  .toast{position:fixed;bottom:24px;right:24px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 20px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:10px;transform:translateY(80px);opacity:0;transition:all .3s cubic-bezier(.34,1.56,.64,1);z-index:999;max-width:360px}
-  .toast.show{transform:translateY(0);opacity:1}
-  .toast.ok{border-color:rgba(52,211,153,.3);color:var(--success)}
-  .toast.er{border-color:rgba(248,113,113,.3);color:var(--danger)}
-  .toast.inf{border-color:rgba(91,124,250,.3);color:var(--accent)}
+@keyframes cardIn{
+  from{opacity:0;transform:translateY(16px)}
+  to{opacity:1;transform:none}
+}
 
-  /* modal */
-  .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);z-index:900;display:none;align-items:center;justify-content:center}
-  .modal-overlay.show{display:flex}
-  .modal{background:var(--surface);border:1px solid var(--border);border-radius:16px;padding:28px;max-width:420px;width:90%;animation:moin .25s cubic-bezier(.34,1.56,.64,1)}
-  @keyframes moin{from{opacity:0;transform:scale(.9)}to{opacity:1;transform:none}}
-  .modal h3{font-size:18px;font-weight:800;margin-bottom:8px}
-  .modal p{font-size:13px;color:var(--dim);line-height:1.6;margin-bottom:20px}
-  .modal .actions{justify-content:flex-end}
+.card::before{
+  content:'';
+  position:absolute;inset:0;
+  background:radial-gradient(ellipse at 20% 20%,rgba(91,124,250,.07),transparent 60%);
+  opacity:0;
+  transition:opacity .3s;
+}
+
+.card:hover{
+  border-color:var(--accent);
+  transform:translateY(-3px);
+  box-shadow:0 12px 40px rgba(91,124,250,.15);
+}
+
+.card:hover::before{opacity:1}
+
+.card.soon{
+  opacity:.5;
+  cursor:not-allowed;
+  pointer-events:none;
+}
+
+.card-icon{
+  font-size:32px;
+  margin-bottom:18px;
+  display:block;
+  filter:drop-shadow(0 0 12px rgba(91,124,250,.3));
+}
+
+.card-title{
+  font-size:18px;
+  font-weight:700;
+  margin-bottom:8px;
+  letter-spacing:-.3px;
+}
+
+.card-desc{
+  font-size:13px;
+  color:var(--dim);
+  line-height:1.6;
+  flex:1;
+}
+
+.card-tags{
+  display:flex;
+  flex-wrap:wrap;
+  gap:6px;
+  margin-top:20px;
+}
+
+.tag{
+  font-size:10px;
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  letter-spacing:.06em;
+  padding:3px 9px;
+  border-radius:5px;
+  background:rgba(91,124,250,.1);
+  color:var(--accent);
+  border:1px solid rgba(91,124,250,.15);
+}
+
+.tag.green{background:rgba(52,211,153,.1);color:#34d399;border-color:rgba(52,211,153,.15)}
+.tag.purple{background:rgba(167,139,250,.1);color:#a78bfa;border-color:rgba(167,139,250,.15)}
+.tag.yellow{background:rgba(251,191,36,.1);color:#fbbf24;border-color:rgba(251,191,36,.15)}
+.tag.muted{background:rgba(100,116,139,.1);color:var(--muted);border-color:rgba(100,116,139,.15)}
+
+.card-arrow{
+  position:absolute;
+  top:28px;right:28px;
+  font-size:18px;
+  opacity:0;
+  transform:translateX(-6px);
+  transition:all .2s;
+}
+
+.card:hover .card-arrow{opacity:1;transform:none}
+
+/* Em breve */
+.soon-badge{
+  position:absolute;
+  top:16px;right:16px;
+  font-size:10px;
+  font-family:'JetBrains Mono',monospace;
+  font-weight:700;
+  background:rgba(251,191,36,.1);
+  border:1px solid rgba(251,191,36,.2);
+  color:#fbbf24;
+  padding:4px 10px;
+  border-radius:6px;
+  letter-spacing:.06em;
+}
+
+/* Footer */
+footer{
+  text-align:center;
+  font-size:12px;
+  color:var(--muted);
+  font-family:'JetBrains Mono',monospace;
+}
+
+footer span{color:var(--accent)}
+
+@media(max-width:480px){
+  .grid{grid-template-columns:1fr}
+  h1{font-size:28px}
+}
 </style>
 </head>
 <body>
+
 <div class="glow g1"></div>
 <div class="glow g2"></div>
-<div class="wrap">
 
-  <header>
-    <div class="logo">🏷️</div>
-    <div class="htxt">
-      <h1>Gerador de Códigos</h1>
-      <p>EAN-13 · EAN-8 · QR Code · SVG · PNG · sem instalar nada</p>
-    </div>
-  </header>
+<div class="page">
 
-  <div class="notice">
-    <span style="flex-shrink:0;margin-top:1px">ℹ️</span>
-    <span>
-      Selecione o tipo de código, insira os dados, visualize e exporte em <strong>SVG</strong> ou <strong>PNG</strong>.
-      O dígito verificador do EAN é calculado automaticamente. Clique em qualquer item do histórico para recarregá-lo.
-    </span>
+  <div class="header">
+    <div class="badge">⚡ ferramentas internas</div>
+    <h1>Central de<br>Ferramentas</h1>
+    <p class="subtitle">Apps leves que rodam direto no navegador.<br>Sem instalar nada, sem login, sem complicação.</p>
   </div>
 
-  <div class="layout">
+  <div class="grid">
 
-    <!-- PAINEL ESQUERDO -->
-    <div>
-      <div class="card">
-        <div class="card-title">Tipo de Código</div>
-        <div class="type-grid" id="typeGrid">
-          <div class="type-btn active" data-type="EAN13">
-            <span class="tb-name">EAN-13</span>
-            <span class="tb-desc">13 dígitos</span>
-          </div>
-          <div class="type-btn" data-type="EAN8">
-            <span class="tb-name">EAN-8</span>
-            <span class="tb-desc">8 dígitos</span>
-          </div>
-          <div class="type-btn" data-type="QR">
-            <span class="tb-name">QR Code</span>
-            <span class="tb-desc">texto livre</span>
-          </div>
-        </div>
-
-        <!-- EAN inputs -->
-        <div id="ean-fields">
-          <div class="field">
-            <label id="numLabel">Número (12 dígitos sem verificador)</label>
-            <input type="text" id="numInput" maxlength="13" placeholder="000000000000" inputmode="numeric">
-            <div class="hint" id="numHint">Digite os 12 primeiros dígitos — o verificador é calculado automaticamente.</div>
-          </div>
-          <div class="opts-row">
-            <div class="tog" id="togText">
-              <div class="sw on" id="swText"></div>
-              <span>Mostrar número</span>
-            </div>
-            <div class="tog" id="togGuard">
-              <div class="sw on" id="swGuard"></div>
-              <span>Barras de guarda</span>
-            </div>
-          </div>
-        </div>
-
-        <!-- QR inputs -->
-        <div id="qr-fields" class="qr-opts">
-          <div class="field">
-            <label>Conteúdo</label>
-            <textarea id="qrInput" rows="3" placeholder="https://exemplo.com.br ou qualquer texto..."></textarea>
-            <div class="hint">URL, texto, e-mail, telefone…</div>
-          </div>
-          <div class="field">
-            <label>Nível de Correção de Erro</label>
-            <select id="qrEcc" style="width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:12px 14px;font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--text);outline:none">
-              <option value="L">L — Baixo (7%)</option>
-              <option value="M" selected>M — Médio (15%)</option>
-              <option value="Q">Q — Quartil (25%)</option>
-              <option value="H">H — Alto (30%)</option>
-            </select>
-          </div>
-          <div class="color-row">
-            <div class="color-field">
-              <label>Cor do módulo</label>
-              <input type="color" id="qrFg" value="#000000">
-            </div>
-            <div class="color-field">
-              <label>Cor do fundo</label>
-              <input type="color" id="qrBg" value="#ffffff">
-            </div>
-          </div>
-        </div>
-
-        <div class="actions">
-          <button class="btn btn-p" id="btnGen">✦ Gerar Código</button>
-          <button class="btn btn-s" id="btnClear">Limpar</button>
-        </div>
+    <!-- Renomeador -->
+    <a class="card" href="https://jeankomgroup.github.io/renomeadordearquivo/">
+      <span class="card-arrow">→</span>
+      <span class="card-icon">⚡</span>
+      <div class="card-title">Renomeador de Arquivos</div>
+      <p class="card-desc">Remove acentos, cedilhas e caracteres especiais de nomes de arquivos. Suporta subpastas inteiras de uma vez.</p>
+      <div class="card-tags">
+        <span class="tag green">✓ ativo</span>
+        <span class="tag">arquivos</span>
+        <span class="tag purple">subpastas</span>
       </div>
-    </div>
+    </a>
 
-    <!-- PAINEL DIREITO -->
-    <div>
-      <div class="preview-card" id="previewCard">
-        <div class="preview-empty" id="previewEmpty">
-          <span class="ei">🔲</span>
-          <p>O código gerado aparecerá aqui</p>
-        </div>
-        <div id="preview-area">
-          <div class="preview-box" id="previewBox"></div>
-          <div class="preview-info" id="previewInfo"></div>
-          <div class="dl-btns">
-            <button class="btn btn-s" id="btnSvg">⬇ Baixar SVG</button>
-            <button class="btn btn-p" id="btnPng">⬇ Baixar PNG</button>
-          </div>
-        </div>
+    <!-- Gerador de Códigos -->
+    <a class="card" href="https://jeankomgroup.github.io/geradordecodigos/">
+      <span class="card-arrow">→</span>
+      <span class="card-icon">🏷️</span>
+      <div class="card-title">Gerador de Códigos</div>
+      <p class="card-desc">Gera EAN-13, EAN-8 e QR Code com OCR-B real. Exporta SVG vetorial e PNG 300dpi com fundo transparente, pronto para impressão.</p>
+      <div class="card-tags">
+        <span class="tag green">✓ ativo</span>
+        <span class="tag">EAN · QR</span>
+        <span class="tag purple">SVG · PNG</span>
       </div>
-    </div>
+    </a>
 
-  </div><!-- /layout -->
+    <!-- Agente Criativo -->
+    <a class="card" href="https://jeankomgroup.github.io/agentecriativo/">
+      <span class="card-arrow">→</span>
+      <span class="card-icon">🎨</span>
+      <div class="card-title">Agente de Criativos</div>
+      <p class="card-desc">Gera heads, CTAs e TSV para InDesign Data Merge via IA. Briefing de campanha → variações por produto e região prontas para produção.</p>
+      <div class="card-tags">
+        <span class="tag green">✓ ativo</span>
+        <span class="tag">IA</span>
+        <span class="tag purple">InDesign</span>
+      </div>
+    </a>
 
-  <!-- HISTÓRICO -->
-  <div class="history-card" id="historyCard">
-    <div class="history-head">
-      <div>#</div>
-      <div>Valor</div>
-      <div>Tipo</div>
-      <div>Dígito</div>
-      <div>Hora</div>
-    </div>
-    <div class="history-body" id="historyBody"></div>
   </div>
 
-</div><!-- /wrap -->
+  <footer>
+    <p>Ferramentas criadas para uso restrito e interno da <span>Komgroup</span>.</p>
+  </footer>
 
-<!-- MODAL de exportação -->
-<div class="modal-overlay" id="modalOverlay">
-  <div class="modal">
-    <h3 id="modalTitle">Exportar Código</h3>
-    <p id="modalDesc">Escolha as opções de exportação abaixo.</p>
-    <div class="actions" id="modalActions"></div>
-  </div>
 </div>
 
-<div class="toast" id="toast"></div>
-
-<script>
-// ── Digit paths (OCR-B extraído do SVG GS1 de referência) ─────────────────
-const DI={"7":{p:["M1.890625,23.200624Q1.890625,23.356874 1.765625,23.575624Q1.640625,23.778749 1.421875,24.028749Q1.3125,24.138124 1.21875,24.294374Q1.140625,24.419374 1.09375,24.559999Q1.046875,24.684999 1.015625,24.903749Q1,25.106874 1,25.434999L0.734375,25.434999Q0.734375,25.122499 0.765625,24.888124Q0.796875,24.638124 0.84375,24.481874Q0.90625,24.325624 0.984375,24.200624Q1.0625,24.059999 1.203125,23.903749Q1.296875,23.794374 1.390625,23.669374Q1.484375,23.575624 1.515625,23.497499Q1.546875,23.450624 1.5625,23.388124Q1.5625,23.372499 1.5625,23.341249L0.40625,23.341249L0.40625,23.122499L1.890625,23.122499L1.890625,23.200624Z"],cx:1.1484375},"8":{p:["M6.764179,24.856874Q6.764179,25.153749 6.561054,25.309999Q6.373554,25.466249 5.998554,25.466249Q5.639179,25.466249 5.436054,25.309999Q5.232929,25.138124 5.232929,24.825624Q5.232929,24.606874 5.342304,24.450624Q5.467304,24.294374 5.764179,24.138124Q5.342304,23.872499 5.342304,23.591249Q5.342304,23.356874 5.514179,23.216249Q5.686054,23.075624 5.998554,23.075624Q6.295429,23.075624 6.467304,23.216249Q6.654804,23.341249 6.654804,23.575624Q6.654804,23.731874 6.561054,23.872499Q6.467304,23.997499 6.248554,24.138124Q6.529804,24.294374 6.639179,24.466249Q6.764179,24.622499 6.764179,24.856874Z", "M6.389179,23.606874Q6.389179,23.466249 6.279804,23.388124Q6.186054,23.309999 5.998554,23.309999Q5.826679,23.309999 5.717304,23.388124Q5.607929,23.466249 5.607929,23.591249Q5.607929,23.841249 5.998554,23.997499Q6.389179,23.841249 6.389179,23.606874Z", "M6.482929,24.809999Q6.482929,24.653749 6.373554,24.528749Q6.264179,24.403749 5.998554,24.278749Q5.732929,24.403749 5.623554,24.528749Q5.514179,24.653749 5.514179,24.809999Q5.514179,25.013124 5.639179,25.122499Q5.764179,25.231874 5.998554,25.231874Q6.232929,25.231874 6.357929,25.122499Q6.482929,25.013124 6.482929,24.809999Z"],cx:5.998554000000001},"9":{p:["M9.065495,23.872499Q9.065495,24.169374 8.815495,24.591249Q8.565495,25.013124 8.127995,25.434999L7.784245,25.434999Q7.98737,25.247499 8.17487,25.028749Q8.377995,24.794374 8.61237,24.466249Q8.502995,24.528749 8.409245,24.544374Q8.33112,24.559999 8.221745,24.559999Q7.92487,24.559999 7.721745,24.356874Q7.51862,24.153749 7.51862,23.841249Q7.51862,23.497499 7.721745,23.294374Q7.940495,23.075624 8.284245,23.075624Q8.627995,23.075624 8.846745,23.294374Q9.065495,23.513124 9.065495,23.872499Z", "M8.784245,23.825624Q8.784245,23.591249 8.64362,23.450624Q8.51862,23.309999 8.284245,23.309999Q8.065495,23.309999 7.92487,23.450624Q7.79987,23.591249 7.79987,23.841249Q7.79987,24.075624 7.92487,24.216249Q8.065495,24.341249 8.284245,24.341249Q8.51862,24.341249 8.64362,24.200624Q8.784245,24.059999 8.784245,23.825624Z"],cx:8.2920575},"4":{p:["M13.62125,24.903749L13.30875,24.903749L13.30875,25.434999L13.043125,25.434999L13.043125,24.903749L12.09,24.903749L12.09,24.669374L12.68375,23.091249L12.949375,23.091249L12.37125,24.669374L13.043125,24.669374L13.043125,24.169374L13.30875,24.169374L13.30875,24.669374L13.62125,24.669374L13.62125,24.903749Z"],cx:12.855625},"1":{p:["M17.833256,25.434999L17.583256,25.434999L17.583256,23.403749L16.895756,23.950624L16.895756,23.669374L17.567631,23.122499L17.833256,23.122499L17.833256,25.434999Z"],cx:17.364506},"5":{p:["M21.834805,24.622499Q21.834805,25.028749 21.50668,25.247499Q21.178555,25.466249 20.53793,25.466249L20.53793,25.231874Q21.022305,25.231874 21.272305,25.091249Q21.553555,24.934999 21.553555,24.606874Q21.553555,24.372499 21.38168,24.247499Q21.209805,24.106874 20.88168,24.106874Q20.741055,24.106874 20.553555,24.138124L20.63168,23.122499L21.75668,23.122499L21.75668,23.341249L20.866055,23.341249L20.834805,23.903749Q20.928555,23.888124 21.00668,23.888124Q21.366055,23.888124 21.60043,24.091249Q21.834805,24.294374 21.834805,24.622499Z"],cx:21.1863675},"3":{p:["M26.468685,24.731874Q26.468685,25.075624 26.218685,25.278749Q25.98431,25.466249 25.562435,25.466249Q25.312435,25.466249 25.01556,25.356874L25.01556,25.091249Q25.156185,25.169374 25.29681,25.200624Q25.437435,25.231874 25.593685,25.231874Q25.843685,25.231874 25.999935,25.091249Q26.17181,24.950624 26.17181,24.700624Q26.17181,24.466249 25.98431,24.356874Q25.812435,24.231874 25.39056,24.231874L25.39056,24.044374L26.062435,23.341249L25.01556,23.341249L25.01556,23.122499L26.374935,23.122499L26.374935,23.403749L25.718685,24.044374Q26.07806,24.044374 26.26556,24.231874Q26.468685,24.419374 26.468685,24.731874Z"],cx:25.7421225},"0":{p:["M6.764179,24.856874Q6.764179,25.153749 6.561054,25.309999Q6.373554,25.466249 5.998554,25.466249Q5.639179,25.466249 5.436054,25.309999Q5.232929,25.138124 5.232929,24.825624Q5.232929,24.606874 5.342304,24.450624Q5.467304,24.294374 5.764179,24.138124Q5.342304,23.872499 5.342304,23.591249Q5.342304,23.356874 5.514179,23.216249Q5.686054,23.075624 5.998554,23.075624Q6.295429,23.075624 6.467304,23.216249Q6.654804,23.341249 6.654804,23.575624Q6.654804,23.731874 6.561054,23.872499Q6.467304,23.997499 6.248554,24.138124Q6.529804,24.294374 6.639179,24.466249Q6.764179,24.622499 6.764179,24.856874Z", "M6.553554,23.309999Q6.553554,23.309999 5.998554,23.309999Q5.442554,23.309999 5.442554,24.270937Q5.442554,25.231874 5.998554,25.231874Q6.553554,25.231874 6.553554,24.270937Z"],cx:5.998554000000001},"6":{p:["M6.771992,24.669374Q6.771992,24.372499 6.521992,23.950624Q6.271992,23.528749 5.834492,23.106874L5.490742,23.106874Q5.693867,23.294374 5.881367,23.513124Q6.084492,23.747499 6.318867,24.075624Q6.209492,24.013124 6.115742,23.997499Q6.037617,23.981874 5.928242,23.981874Q5.631367,23.981874 5.428242,24.184999Q5.225117,24.388124 5.225117,24.700624Q5.225117,25.044374 5.428242,25.247499Q5.646992,25.466249 5.990742,25.466249Q6.334492,25.466249 6.553242,25.247499Q6.771992,25.028749 6.771992,24.669374Z", "M6.490742,24.716249Q6.490742,24.950624 6.350117,25.091249Q6.225117,25.231874 5.990742,25.231874Q5.771992,25.231874 5.631367,25.091249Q5.506367,24.950624 5.506367,24.700624Q5.506367,24.466249 5.631367,24.325624Q5.771992,24.200624 5.990742,24.200624Q6.225117,24.200624 6.350117,24.341249Q6.490742,24.481874 6.490742,24.716249Z"],cx:5.998554000000001},"2":{p:["M5.232554,23.385624Q5.232554,23.075624 5.998554,23.075624Q6.763554,23.075624 6.763554,23.385624Q6.763554,23.855624 5.332554,24.275624L5.232554,25.466249L6.763554,25.466249"],cx:5.998554000000001}};
-
-// ── Tabelas EAN ────────────────────────────────────────────────────────────
-const L={'0':'0001101','1':'0011001','2':'0010011','3':'0111101','4':'0100011','5':'0110001','6':'0101111','7':'0111011','8':'0110111','9':'0001011'};
-const R={'0':'1110010','1':'1100110','2':'1101100','3':'1000010','4':'1011100','5':'1001110','6':'1010000','7':'1000100','8':'1001000','9':'1110100'};
-const G={'0':'0100111','1':'0110011','2':'0011011','3':'0100001','4':'0011101','5':'0111001','6':'0000101','7':'0010001','8':'0001001','9':'0010111'};
-const PAR={'0':'LLLLLL','1':'LLGLGG','2':'LLGGLG','3':'LLGGGL','4':'LGLLGG','5':'LGGLLG','6':'LGGGLL','7':'LGLGLG','8':'LGLGGL','9':'LGGLGL'};
-
-function ean13Bits(c){
-  let b='101';
-  const par=PAR[c[0]];
-  for(let i=0;i<6;i++) b+= par[i]==='L'?L[c[i+1]]:G[c[i+1]];
-  b+='01010';
-  for(let i=0;i<6;i++) b+=R[c[7+i]];
-  return b+'101';
-}
-function ean8Bits(c){
-  let b='101';
-  for(let i=0;i<4;i++) b+=L[c[i]];
-  b+='01010';
-  for(let i=0;i<4;i++) b+=R[c[4+i]];
-  return b+'101';
-}
-function calcEANCheck(digits, is13){
-  const n=is13?12:7; let s=0;
-  for(let i=0;i<n;i++) s+=parseInt(digits[i])*(i%2===0?1:3);
-  return String((10-s%10)%10);
-}
-
-// ── Shift de coordenadas ───────────────────────────────────────────────────
-function shiftPath(path, dx){
-  return path.replace(/(-?[\d]+\.[\d]{1,6})(,)(-?[\d]+\.[\d]{1,6})/g,
-    (m,x,comma,y) => (parseFloat(x)+dx).toFixed(6)+comma+y);
-}
-
-function placeDigit(digit, targetCx){
-  const info = DI[digit];
-  if(!info) return '';
-  const dx = targetCx - info.cx;
-  return info.p.map(p => shiftPath(p, dx)).join(' ');
-}
-
-// ── Gerar SVG EAN-13 (GS1 SC2 exacto) ────────────────────────────────────
-function buildEAN13SVG(code, showText, showGuards){
-  const X=0.33, W=37.29, H=25.93, dataH=22.4975, guardH=24.1475;
-  const bits = ean13Bits(code);
-  const colLeft  = [5.775,8.085,10.395,12.705,15.015,17.325];
-  const colRight = [21.285,23.595,25.905,28.215,30.525,32.835];
-  const OFF = 0.224; // offset glyph → coluna
-
-  let bars='';
-  for(let i=0;i<bits.length;i++){
-    if(bits[i]!=='1') continue;
-    const x = 3.63 + i*X;
-    const guard = (i<=2)||(i>=45&&i<=49)||(i>=92);
-    const h = (guard&&showGuards)?guardH:dataH;
-    bars+=`M${x.toFixed(5)},0L${(x+X).toFixed(5)},0L${(x+X).toFixed(5)},${h.toFixed(6)}L${x.toFixed(5)},${h.toFixed(6)}Z`;
-  }
-
-  let glyphs='';
-  if(showText){
-    glyphs += placeDigit(code[0], 1.148); // dígito do sistema: posição exata do SVG de referência
-    colLeft.forEach((cx,i)  => glyphs += placeDigit(code[i+1], cx+OFF));
-    colRight.forEach((cx,i) => glyphs += placeDigit(code[i+7], cx+OFF));
-  }
-
-  const fontFaceComment='<!-- OCR-B outlines extraídos do SVG GS1 -->';
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${W}mm" height="${H}mm" viewBox="0 0 ${W} ${H}">
-<title>EAN-13</title>
-<g><rect opacity="0" width="${W}" height="${H}"/>
-<path fill="#000000" d="${bars} ${glyphs}"/>
-</g></svg>`;
-}
-
-// ── Gerar SVG EAN-8 ────────────────────────────────────────────────────────
-function buildEAN8SVG(code, showText, showGuards){
-  const X=0.33, W=26.73, H=21.64, dataH=18.23, guardH=19.88;
-  const bits = ean8Bits(code);
-  // Colunas EAN-8: 7X quiet + 3X start guard, cada dígito 7X
-  const colLeft  = [0,1,2,3].map(i => (7+3+i*7+3.5)*X);
-  const colRight = [0,1,2,3].map(i => (7+3+28+5+i*7+3.5)*X);
-  const OFF = 0.224;
-
-  // Scale Y: EAN-8 é menor, escalar os glyphs de EAN-13 (25.93mm) para EAN-8 (21.64mm)
-  const sy = H/25.93;
-
-  let bars='';
-  for(let i=0;i<bits.length;i++){
-    if(bits[i]!=='1') continue;
-    const x = 7*X + i*X;
-    const guard = (i<=2)||(i>=31&&i<=35)||(i>=64);
-    const h = (guard&&showGuards)?guardH:dataH;
-    bars+=`M${x.toFixed(5)},0L${(x+X).toFixed(5)},0L${(x+X).toFixed(5)},${h.toFixed(6)}L${x.toFixed(5)},${h.toFixed(6)}Z`;
-  }
-
-  // Para EAN-8 escalar glyphs em Y (transform scale)
-  let glyphs='';
-  if(showText){
-    // Usar um <g transform="scale(1,sy)"> em volta dos glyphs
-    let gPaths = '';
-    colLeft.forEach((cx,i)  => gPaths += placeDigit(code[i],   cx+OFF));
-    colRight.forEach((cx,i) => gPaths += placeDigit(code[i+4], cx+OFF));
-    glyphs = gPaths;
-  }
-
-  return `<?xml version="1.0" encoding="UTF-8"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="${W}mm" height="${H}mm" viewBox="0 0 ${W} ${H}">
-<title>EAN-8</title>
-<g><rect opacity="0" width="${W}" height="${H}"/>
-<path fill="#000000" d="${bars} ${glyphs}"/>
-</g></svg>`;
-}
-
-// ── Estado ──────────────────────────────────────────────────────────────────
-let currentType = 'EAN13';
-let currentSVG  = null;
-let currentMeta = {};
-let showText    = true;
-let showGuard   = true;
-let history     = [];
-
-// ── Elementos ───────────────────────────────────────────────────────────────
-const typeGrid    = document.getElementById('typeGrid');
-const eanFields   = document.getElementById('ean-fields');
-const qrFields    = document.getElementById('qr-fields');
-const numInput    = document.getElementById('numInput');
-const numLabel    = document.getElementById('numLabel');
-const numHint     = document.getElementById('numHint');
-const qrInput     = document.getElementById('qrInput');
-const qrEcc       = document.getElementById('qrEcc');
-const qrFg        = document.getElementById('qrFg');
-const qrBg        = document.getElementById('qrBg');
-const btnGen      = document.getElementById('btnGen');
-const btnClear    = document.getElementById('btnClear');
-const btnSvg      = document.getElementById('btnSvg');
-const btnPng      = document.getElementById('btnPng');
-const previewArea = document.getElementById('preview-area');
-const previewEmpty= document.getElementById('previewEmpty');
-const previewBox  = document.getElementById('previewBox');
-const previewInfo = document.getElementById('previewInfo');
-const historyCard = document.getElementById('historyCard');
-const historyBody = document.getElementById('historyBody');
-const swText      = document.getElementById('swText');
-const swGuard     = document.getElementById('swGuard');
-
-// ── Tipo ────────────────────────────────────────────────────────────────────
-typeGrid.querySelectorAll('.type-btn').forEach(btn => {
-  btn.addEventListener('click', () => {
-    typeGrid.querySelectorAll('.type-btn').forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-    currentType = btn.dataset.type;
-    if(currentType==='QR'){ eanFields.style.display='none'; qrFields.classList.add('show'); }
-    else{ eanFields.style.display='block'; qrFields.classList.remove('show'); updateEanLabel(); }
-    resetPreview();
-  });
-});
-
-function updateEanLabel(){
-  if(currentType==='EAN13'){
-    numLabel.textContent='Número (12 dígitos sem verificador)';
-    numInput.maxLength=13; numInput.placeholder='000000000000';
-    numHint.textContent='Digite os 12 primeiros dígitos — o verificador é calculado automaticamente.';
-  } else {
-    numLabel.textContent='Número (7 dígitos sem verificador)';
-    numInput.maxLength=8; numInput.placeholder='0000000';
-    numHint.textContent='Digite os 7 primeiros dígitos — o verificador é calculado automaticamente.';
-  }
-  numHint.className='hint';
-}
-
-document.getElementById('togText').addEventListener('click',()=>{
-  showText=!showText; swText.classList.toggle('on',showText);
-});
-document.getElementById('togGuard').addEventListener('click',()=>{
-  showGuard=!showGuard; swGuard.classList.toggle('on',showGuard);
-});
-
-numInput.addEventListener('input',()=>{
-  numInput.value=numInput.value.replace(/[^0-9]/g,'');
-  const len=currentType==='EAN13'?12:7;
-  const v=numInput.value;
-  if(!v.length){ numHint.textContent=`Digite os ${len} primeiros dígitos.`; numHint.className='hint'; return; }
-  if(v.length<len){ numHint.textContent=`${v.length}/${len} dígitos`; numHint.className='hint'; return; }
-  const check=calcEANCheck(v.slice(0,len),currentType==='EAN13');
-  numHint.textContent=`✓ Verificador: ${check}  →  completo: ${v.slice(0,len)}${check}`;
-  numHint.className='hint ok';
-});
-
-// ── Gerar ───────────────────────────────────────────────────────────────────
-btnGen.addEventListener('click',generate);
-function generate(){
-  if(currentType==='QR') generateQR();
-  else generateEAN();
-}
-
-function generateEAN(){
-  const len=currentType==='EAN13'?12:7;
-  const raw=numInput.value.replace(/[^0-9]/g,'');
-  if(raw.length<len){ showToast(`Insira pelo menos ${len} dígitos.`,'er'); return; }
-  const base=raw.slice(0,len);
-  const check=calcEANCheck(base,currentType==='EAN13');
-  const full=base+check;
-  const svg = currentType==='EAN13'
-    ? buildEAN13SVG(full, showText, showGuard)
-    : buildEAN8SVG(full, showText, showGuard);
-  currentSVG=svg;
-  currentMeta={type:currentType, value:full, check, size:'GS1 SC2'};
-  showPreview(svg, currentMeta);
-  addHistory({type:currentType, value:full, check, time:nowStr()});
-  showToast(`${currentType} gerado!`,'ok');
-}
-
-// ── QR Code ─────────────────────────────────────────────────────────────────
-function generateQR(){
-  const text=qrInput.value.trim();
-  if(!text){ showToast('Digite o conteúdo do QR Code.','er'); return; }
-  const ecc=qrEcc.value, fg=qrFg.value, bg=qrBg.value;
-  const div=document.createElement('div');
-  try{ new QRCode(div,{text,width:256,height:256,correctLevel:QRCode.CorrectLevel[ecc]}); }
-  catch(e){ showToast('Erro QR: '+e.message,'er'); return; }
-  setTimeout(()=>{
-    const canvas=div.querySelector('canvas');
-    if(!canvas){ showToast('Erro QR canvas.','er'); return; }
-    const ctx=canvas.getContext('2d');
-    const imgData=ctx.getImageData(0,0,canvas.width,canvas.height);
-    const mc=detectMC(imgData,canvas.width);
-    const svg=qrToSVG(imgData,canvas.width,mc,fg,bg);
-    currentSVG=svg; currentMeta={type:'QR',value:text,ecc,size:mc+'x'+mc};
-    showPreview(svg,currentMeta);
-    addHistory({type:'QR',value:text,check:ecc,time:nowStr()});
-    showToast('QR Code gerado!','ok');
-  },100);
-}
-function detectMC(imgData,w){
-  const d=imgData.data; let fD=-1,sL=-1;
-  for(let x=0;x<w;x++){ const dark=d[x*4]<128; if(dark&&fD===-1)fD=x; else if(!dark&&fD!==-1&&sL===-1){sL=x;break;} }
-  const ms=sL>0?sL-fD:Math.round(w/21);
-  return Math.round(w/Math.max(ms,1));
-}
-function qrToSVG(imgData,cw,mc,fg,bg){
-  const ms=cw/mc,pad=4,cell=10,vs=(mc+pad*2)*cell;
-  let rects=''; const d=imgData.data;
-  for(let r=0;r<mc;r++) for(let c=0;c<mc;c++){
-    const px=Math.round(c*ms),py=Math.round(r*ms),i=(py*cw+px)*4;
-    if(d[i]<128) rects+=`<rect x="${(c+pad)*cell}" y="${(r+pad)*cell}" width="${cell}" height="${cell}" fill="${fg}"/>`;
-  }
-  return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${vs} ${vs}" width="${vs}" height="${vs}"><rect width="${vs}" height="${vs}" fill="${bg}"/>${rects}</svg>`;
-}
-
-// ── Preview ──────────────────────────────────────────────────────────────────
-function showPreview(svgStr, meta){
-  previewBox.innerHTML = svgStr;
-  previewEmpty.style.display='none';
-  previewArea.classList.add('show');
-  let h=`<div class="pinfo-row"><span>Tipo</span><span class="badge ac">${meta.type}</span></div>
-         <div class="pinfo-row"><span>Valor</span><span>${escH(meta.value)}</span></div>`;
-  if(meta.check&&meta.type!=='QR') h+=`<div class="pinfo-row"><span>Verificador</span><span class="badge ok">${meta.check}</span></div>`;
-  if(meta.ecc) h+=`<div class="pinfo-row"><span>ECC</span><span>${meta.ecc}</span></div>`;
-  if(meta.size) h+=`<div class="pinfo-row"><span>Tamanho</span><span>${meta.size}</span></div>`;
-  previewInfo.innerHTML=h;
-}
-function resetPreview(){
-  currentSVG=null; previewArea.classList.remove('show');
-  previewEmpty.style.display='block'; previewInfo.innerHTML=''; previewBox.innerHTML='';
-}
-
-// ── Downloads ────────────────────────────────────────────────────────────────
-// ── Preparar SVG limpo para download (sem <?xml?>, com px explícitos) ────────
-function getSVGForExport(scalePx) {
-  // Pegar o SVG do preview e ajustar width/height para px absolutos
-  const svgEl = previewBox.querySelector('svg');
-  if (!svgEl) return null;
-  const clone = svgEl.cloneNode(true);
-  // Remover atributos mm — definir px explicitamente para compatibilidade
-  const vb = clone.getAttribute('viewBox'); // "0 0 37.29 25.93" (mm)
-  if (vb) {
-    const parts = vb.split(' ');
-    const vw = parseFloat(parts[2]);
-    const vh = parseFloat(parts[3]);
-    // Escalar viewBox → scalePx largura
-    const scale = scalePx / vw;
-    clone.setAttribute('width',  (vw * scale).toFixed(2) + 'px');
-    clone.setAttribute('height', (vh * scale).toFixed(2) + 'px');
-    clone.removeAttribute('xmlns:xlink');
-  }
-  // Serializar sem declaração XML (causa bloqueio em alguns browsers)
-  return new XMLSerializer().serializeToString(clone);
-}
-
-// Converte SVG string para base64 de forma segura (suporta UTF-8)
-function svgToBase64(svgStr) {
-  // encodeURIComponent escapa tudo, unescape converte de volta para bytes ISO-8859-1 que btoa aceita
-  return btoa(unescape(encodeURIComponent(svgStr)));
-}
-
-btnSvg.addEventListener('click', () => {
-  if (!currentSVG) return;
-  const svgClean = getSVGForExport(800) || currentSVG;
-  const fname = `codigo_${currentMeta.type}_${currentMeta.value||'qr'}.svg`;
-  try {
-    const b64 = svgToBase64(svgClean);
-    const a = document.createElement('a');
-    a.href = 'data:image/svg+xml;base64,' + b64;
-    a.download = fname;
-    document.body.appendChild(a); a.click(); document.body.removeChild(a);
-    showToast('SVG baixado!', 'ok');
-  } catch(e) {
-    // fallback: Blob direto
-    const blob = new Blob([svgClean], {type:'image/svg+xml;charset=utf-8'});
-    downloadBlob(blob, fname);
-    showToast('SVG baixado!', 'ok');
-  }
-});
-
-btnPng.addEventListener('click', () => {
-  if (!currentSVG) return;
-  const svgEl = previewBox.querySelector('svg');
-  if (!svgEl) return;
-  const vb = (svgEl.getAttribute('viewBox') || '').split(' ');
-  const vw = parseFloat(vb[2]) || 400;
-  const vh = parseFloat(vb[3]) || 300;
-
-  // 300 dpi: EAN-13 37.29mm → 441px, EAN-8 26.73mm → 316px
-  const dpi = 300;
-  const pw = Math.round(vw * dpi / 25.4);
-  const ph = Math.round(vh * dpi / 25.4);
-
-  const canvas = document.createElement('canvas');
-  canvas.width = pw; canvas.height = ph;
-  const ctx = canvas.getContext('2d');
-  // Fundo transparente — NÃO preencher com branco para PNG transparente
-  // ctx.clearRect já deixa transparente por padrão
-
-  const svgClean = getSVGForExport(pw);
-  if (!svgClean) return;
-
-  // Remover o rect opacity="0" e qualquer rect de fundo branco do SVG antes de exportar
-  const svgTransparent = svgClean.replace(/<rect[^>]*opacity="0"[^>]*\/>/g, '')
-                                  .replace(/<rect[^>]*fill="#fff(fff)?"[^>]*\/>/g, '');
-
-  try {
-    const b64 = svgToBase64(svgTransparent);
-    const img = new Image();
-    img.onload = () => {
-      ctx.drawImage(img, 0, 0, pw, ph);
-      canvas.toBlob(b => {
-        if (!b) { showToast('Erro ao gerar PNG.', 'er'); return; }
-        const fname = `codigo_${currentMeta.type}_${currentMeta.value||'qr'}.png`;
-        downloadBlob(b, fname);
-        showToast(`PNG baixado! (${pw}×${ph}px, fundo transparente)`, 'ok');
-      }, 'image/png');
-    };
-    img.onerror = () => showToast('Erro ao renderizar SVG para PNG.', 'er');
-    img.src = 'data:image/svg+xml;base64,' + b64;
-  } catch(e) {
-    showToast('Erro: ' + e.message, 'er');
-  }
-});
-
-function downloadBlob(blob, name) {
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement('a');
-  a.href = url; a.download = name;
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
-  setTimeout(() => URL.revokeObjectURL(url), 3000);
-}
-
-// ── Limpar ───────────────────────────────────────────────────────────────────
-btnClear.addEventListener('click',()=>{
-  numInput.value=''; qrInput.value='';
-  numHint.textContent='Digite os dígitos — o verificador é calculado automaticamente.';
-  numHint.className='hint'; resetPreview();
-});
-
-// ── Histórico ────────────────────────────────────────────────────────────────
-function addHistory(item){
-  history.unshift(item); if(history.length>30) history.pop();
-  renderHistory(); historyCard.classList.add('show');
-}
-function renderHistory(){
-  historyBody.innerHTML=history.map((h,i)=>`
-    <div class="hrow" onclick="loadHistory(${i})" style="animation-delay:${i*0.02}s">
-      <div class="rn" style="font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace">${i+1}</div>
-      <div class="hcode">${escH(h.value)}</div>
-      <div><span class="htype">${h.type}</span></div>
-      <div class="htime">${h.check||h.ecc||'—'}</div>
-      <div class="htime">${h.time}</div>
-    </div>`).join('');
-}
-function loadHistory(i){
-  const h=history[i];
-  typeGrid.querySelectorAll('.type-btn').forEach(b=>b.classList.toggle('active',b.dataset.type===h.type));
-  currentType=h.type;
-  if(h.type==='QR'){ eanFields.style.display='none'; qrFields.classList.add('show'); qrInput.value=h.value; }
-  else{ eanFields.style.display='block'; qrFields.classList.remove('show');
-         numInput.value=h.value.slice(0,h.type==='EAN13'?12:7); updateEanLabel(); }
-  generate(); showToast('Recarregado do histórico.','inf');
-}
-
-// ── Utils ─────────────────────────────────────────────────────────────────────
-function nowStr(){ return new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit',second:'2-digit'}); }
-function escH(s){ return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
-let tt;
-function showToast(msg,type,dur=3000){
-  const t=document.getElementById('toast'); t.textContent=msg; t.className=`toast ${type} show`;
-  clearTimeout(tt); tt=setTimeout(()=>t.classList.remove('show'),dur);
-}
-</script>
 </body>
 </html>
